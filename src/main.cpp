@@ -2,6 +2,7 @@
 #include <AccelStepper.h>
 #include <Wire.h>
 #include <Adafruit_INA219.h>
+#include <Stepper.h>
 
 // #define ACCEL_STEPPER
 #define ULN2003_STEPPER
@@ -17,8 +18,6 @@ AccelStepper stepper(AccelStepper::DRIVER, 6, 7);
 #endif
 
 #ifdef ULN2003_STEPPER
-#include <Stepper.h>
-
 // Defines the number of steps per rotation
 const int stepsPerRevolution = 2038;
 // Creates an instance of stepper class
@@ -70,13 +69,12 @@ void loop()
   // stepper.runSpeed();
 
 	// Rotate CW slowly at 5 RPM
-	myStepper.setSpeed(5);
-	myStepper.step(stepsPerRevolution);
-	delay(1000);
+	// myStepper.setSpeed(5);
+	// myStepper.step(stepsPerRevolution);
 
   print_ina219();
   read_ina219();
-  delay(2000);
+  delay(1000);
 }
 
 int setup_ina219()
