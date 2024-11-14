@@ -3,11 +3,28 @@
 #include <Wire.h>
 #include <Adafruit_INA219.h>
 
+// #define ACCEL_STEPPER
+#define ULN2003_STEPPER
+
+
 // Create an INA219 instance
 Adafruit_INA219 ina219;
 
+#ifdef ACCEL_STEPPER
 // Define some steppers and the pins the will use
-AccelStepper stepper(AccelStepper::DRIVER, 10, 11);
+AccelStepper stepper(AccelStepper::DRIVER, 6, 7);
+// AccelStepper stepper2(AccelStepper::FULL4WIRE, 8, 9, 10, 11);
+#endif
+
+#ifdef ULN2003_STEPPER
+#include <Stepper.h>
+
+// Defines the number of steps per rotation
+const int stepsPerRevolution = 2038;
+// Creates an instance of stepper class
+// Pins entered in sequence IN1-IN3-IN2-IN4 for proper step sequence
+Stepper myStepper = Stepper(stepsPerRevolution, 8, 10, 9, 11);
+#endif
 
 float shuntvoltage = 0;
 float busvoltage = 0;
@@ -29,22 +46,33 @@ void setup()
     delay(1);
   }
 
-  Serial.println("Hello!");
-  // int result = myFunction(2, 3);
-  stepper.setMaxSpeed(200.0);
-  stepper.setAcceleration(100.0);
-  // stepper.setSpeed(50);
-  stepper.moveTo(24);
+  Serial.println("SciMed Arduino Application Started!");
+  // stepper.setMaxSpeed(200.0);
+  // stepper.setAcceleration(100.0);
+  // // stepper.setSpeed(50);
+  // stepper.moveTo(24);
+
+
+  // stepper2.setMaxSpeed(300.0);
+  // stepper2.setAcceleration(100.0);
+  // stepper2.moveTo(1000000);
+
+
   setup_ina219();
 }
 
 void loop()
 {
   // Change direction at the limits
-  if (stepper.distanceToGo() == 0)
-    stepper.moveTo(-stepper.currentPosition());
-  stepper.run();
+  // if (stepper.distanceToGo() == 0)
+  //   stepper.moveTo(-stepper.currentPosition());
+  // stepper.run();
   // stepper.runSpeed();
+
+	// Rotate CW slowly at 5 RPM
+	myStepper.setSpeed(5);
+	myStepper.step(stepsPerRevolution);
+	delay(1000);
 
   print_ina219();
   read_ina219();
