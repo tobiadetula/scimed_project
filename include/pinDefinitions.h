@@ -8,4 +8,9 @@
 #define motorPin4  11    // IN4 on ULN2003 ==> Orange on 28BYJ-48
 
 
+// Define stepper motor and driver pins
+#define DIR_PIN 2  // Direction pin
+#define STEP_PIN 3 // Step pin
+#define ENABLE_PIN 7 // Enable pin
+
 #endif // PIN_DEFINITIONS_H

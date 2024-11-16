@@ -8,12 +8,13 @@
 // Create an INA219 instance
 Adafruit_INA219 ina219;
 
-// Define some steppers and the pins the will use
-AccelStepper stepper(AccelStepper::DRIVER, 6, 7);
-// NOTE: The sequence 1-3-2-4 is required for proper sequencing of 28BYJ-48
-AccelStepper stepper1(AccelStepper::HALF4WIRE, motorPin1, motorPin3, motorPin2, motorPin4);
+// Initialize AccelStepper with DRIVER mode
+AccelStepper stepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 
-int endPoint = 1024;        // Move this many steps - 1024 = approx 1/4 turn
+// // NOTE: The sequence 1-3-2-4 is required for proper sequencing of 28BYJ-48
+// AccelStepper stepper1(AccelStepper::HALF4WIRE, motorPin1, motorPin3, motorPin2, motorPin4);
+
+int endPoint = 1024; // Move this many steps - 1024 = approx 1/4 turn
 
 float shuntvoltage = 0;
 float busvoltage = 0;
@@ -28,6 +29,7 @@ int print_ina219();
 
 void setup()
 {
+  pinMode(ENABLE_PIN, OUTPUT);
   Serial.begin(115200);
   while (!Serial)
   {
@@ -36,16 +38,19 @@ void setup()
   }
 
   Serial.println("SciMed Arduino Application Started!");
-  // stepper.setMaxSpeed(200.0);
-  // stepper.setAcceleration(100.0);
-  // // stepper.setSpeed(50);
-  // stepper.moveTo(24);
+  digitalWrite(ENABLE_PIN, HIGH);
+  // Set the maximum speed and acceleration for the stepper motor
+  Serial.println("Setting up stepper motor");
+  stepper.setMaxSpeed(1000);    // Maximum speed in steps per second
+  stepper.setAcceleration(500); // Acceleration in steps per second squared
 
+  // Set initial position
+  stepper.setCurrentPosition(0);
 
-  stepper1.setMaxSpeed(200.0);
-  stepper1.setAcceleration(100.0);
-  stepper1.setSpeed(10);
-  stepper1.moveTo(endPoint);
+  // stepper1.setMaxSpeed(200.0);
+  // stepper1.setAcceleration(100.0);
+  // stepper1.setSpeed(10);
+  // stepper1.moveTo(endPoint);
 
   setup_ina219();
 }
@@ -58,20 +63,42 @@ void loop()
   // stepper.run();
   // stepper.runSpeed();
 
-  //Change direction at the limits
-  //   if (stepper1.distanceToGo() == 0)
-  //  {
-  //    Serial.println(stepper1.currentPosition());
-  //    stepper1.setCurrentPosition(0);
-  //    endPoint = -endPoint;
-  //    stepper1.moveTo(endPoint);
-  //    Serial.println(stepper1.currentPosition());
-  //  }
-  //   stepper1.run();
+  // Change direction at the limits
+  //    if (stepper1.distanceToGo() == 0)
+  //   {
+  //     Serial.println(stepper1.currentPosition());
+  //     stepper1.setCurrentPosition(0);
+  //     endPoint = -endPoint;
+  //     stepper1.moveTo(endPoint);
+  //     Serial.println(stepper1.currentPosition());
+  //   }
+  //    stepper1.run();
+
+  // Move to 1000 steps in one direction
+  stepper.moveTo(10000);
+
+  // Run the motor until it reaches the target position
+  while (stepper.distanceToGo() != 0)
+  {
+    stepper.run();
+  }
+
+  delay(1000); // Pause for 1 second
+
+  // Move back to the starting position
+  stepper.moveTo(0);
+
+  // Run the motor until it reaches the target position
+  while (stepper.distanceToGo() != 0)
+  {
+    stepper.run();
+  }
+
+  delay(1000); // Pause for 1 second
 
   print_ina219();
   read_ina219();
-  delay(1000);  
+  delay(1000);
 }
 
 int setup_ina219()
@@ -80,6 +107,7 @@ int setup_ina219()
   // Initialize the INA219.
   // By default the initialization will use the largest range (32V, 2A).  However
   // you can call a setCalibration function to change this range (see comments).
+  Serial.println("Measuring voltage and current with INA219 ...");
   if (!ina219.begin())
   {
     Serial.println("Failed to find INA219 chip");
