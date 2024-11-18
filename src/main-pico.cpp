@@ -11,29 +11,26 @@ Adafruit_INA219 ina219;
 // Initialize AccelStepper with DRIVER mode
 AccelStepper stepper(AccelStepper::DRIVER, STEP_PIN, DIR_PIN);
 
-// Variables to store the INA219 data
+
 float shuntvoltage = 0;
 float busvoltage = 0;
 float current_mA = 0;
 float loadvoltage = 0;
 float power_mW = 0;
 
-// Timing variables
-unsigned long previousMillisStepper = 0;
-unsigned long previousMillisINA219 = 0;
-const long intervalStepper = 1000; // Interval for stepper motor in milliseconds
-const long intervalINA219 = 1000;  // Interval for INA219 readings in milliseconds
-
-// put function declarations here:
+// Function declarations
 int setup_ina219();
 int read_ina219();
 int print_ina219();
 void print_ina219_csv();
 
-void setup()
-{
-  Serial.begin(115200);
-  delay(1000); // Wait for serial monitor to open
+void setup() {
+    Serial.begin(115200);
+    while (!Serial) {
+        // will pause Zero, Leonardo, etc until serial console opens
+        delay(1);
+    }
+
   Serial.println("SciMed Arduino Application Started!");
   // Set the maximum speed and acceleration for the stepper motor
   Serial.println("Setting up stepper motor");
@@ -42,19 +39,12 @@ void setup()
   stepper.setAcceleration(10000); // Acceleration in steps per second squared
   // Set initial position
   stepper.setCurrentPosition(0);
-  setup_ina219();
+
 }
 
-void loop()
-{
-  unsigned long currentMillis = millis();
-
-  // Handle stepper motor movement
-  if (currentMillis - previousMillisStepper >= intervalStepper)
-  {
-    previousMillisStepper = currentMillis;
-
-    if (stepper.distanceToGo() == 0)
+void loop() {
+    // Motor control logic
+        if (stepper.distanceToGo() == 0)
     {
       // Move to the next position
       if (stepper.currentPosition() == 0)
@@ -66,16 +56,22 @@ void loop()
         stepper.moveTo(0);
       }
     }
-  }
-  stepper.run();
+      stepper.run();
 
-  // Handle INA219 readings
-  if (currentMillis - previousMillisINA219 >= intervalINA219)
-  {
-    previousMillisINA219 = currentMillis;
+
+}
+
+void setup1() {
+    // Setup for core 1
+        setup_ina219();
+
+}
+
+void loop1() {
+    // Current measurement logic
     read_ina219();
     print_ina219();
-  }
+    delay(1000);
 }
 
 int setup_ina219()
