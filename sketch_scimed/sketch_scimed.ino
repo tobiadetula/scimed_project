@@ -25,9 +25,6 @@ float current_mA = 0;
 float loadvoltage = 0;
 float power_mW = 0;
 
-float cumulativePower = 0;
-unsigned long motorStartTime = 0;
-
 // Function declarations
 int setup_ina219();
 int read_ina219();
@@ -36,7 +33,6 @@ int print_ina219();
 void print_ina219_csv();
 void check_motor_status();
 void notify_motor_status();
-void update_cumulative_power();
 
 void setup()
 {
@@ -85,14 +81,6 @@ void loop1()
     print_ina219();
     blink_led(2, 100); // Blink twice every time data is sent
     notify_motor_status();
-    update_cumulative_power();
-    if (motorFinished && motorStatusNotified)
-    {
-        // Motor has finished moving
-        Serial.print("Cumulative Power: ");
-        Serial.print(cumulativePower);
-        Serial.println(" mJ");
-    }
     delay(1000);
 }
 
@@ -185,10 +173,10 @@ void check_motor_status()
 {
     if (stepper.distanceToGo() == 0 && !motorFinished)
     {
-        motorFinished = true;
         motorStatusNotified = true; // Notify core 1 that the motor has finished
+        motorFinished = true;
     }
-    else if (stepper.distanceToGo() != 0 && motorFinished)
+    else if (stepper.distanceToGo() != 0)
     {
         motorFinished = false;
     }
@@ -200,32 +188,5 @@ void notify_motor_status()
     {
         Serial.println("Motor has completed running.");
         motorStatusNotified = false;
-    }
-}
-
-
-
-void update_cumulative_power()
-{
-    if (motorFinished && motorStartTime != 0)
-    {
-        // Motor has stopped moving
-        unsigned long motorStopTime = millis();
-        unsigned long duration = motorStopTime - motorStartTime;
-        cumulativePower += power_mW * (duration / 1000.0); // Convert duration to seconds
-        motorStartTime = 0; // Reset motor start time
-    }
-    else if (!motorFinished && motorStartTime == 0)
-    {
-        // Motor has started moving
-        motorStartTime = millis();
-        cumulativePower = 0; // Reset cumulative power
-    }
-    else if (motorStartTime != 0)
-    {
-        // Motor is still moving
-        unsigned long currentTime = millis();
-        cumulativePower += power_mW * (currentTime - motorStartTime) / 1000.0;
-        motorStartTime = currentTime; // Update motor start time
     }
 }
