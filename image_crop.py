@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import os
 from datetime import datetime
+import matplotlib.pyplot as plt
 
 def load_and_preprocess_image(image_path):
     image = cv2.imread(image_path)
@@ -63,26 +64,16 @@ def process_image(image_path, output_path):
 
 def process_images_in_directory(directory):
     image_files = [f for f in os.listdir(directory) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-    
-    def extract_date(filename):
-        try:
-            return datetime.strptime(filename.split(' ')[1], '%Y-%m-%d %H-%M-%S.png')
-        except (IndexError, ValueError):
-            return datetime.min
-
-    image_files.sort(key=extract_date)
     output_directory = os.path.join(directory, 'cropped_images')
     os.makedirs(output_directory, exist_ok=True)
-    for i, image_file in enumerate(image_files):
+    for image_file in image_files:
         image_path = os.path.join(directory, image_file)
-        output_path = os.path.join(output_directory, f'cropped_{i+1}.png')
+        output_path = os.path.join(output_directory, image_file)
         process_image(image_path, output_path)
 
 def main():
-    root_dir = '.'
-    for subdir, _, _ in os.walk(root_dir):
-        if any(f.lower().endswith(('.png', '.jpg', '.jpeg')) for f in os.listdir(subdir)):
-            process_images_in_directory(subdir)
+    directory = 'actual_test/planetary_gear/test_1kg'
+    process_images_in_directory(directory)
 
 if __name__ == "__main__":
     main()
