@@ -1,79 +1,8 @@
 import os
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 import numpy as np
 from math import sqrt
 import csv
-import cv2
-
-
-def crop_image(image_path):
-    """
-    Crop the image to the area of the grey sheet used for plotting.
-    """
-    image = cv2.imread(image_path)
-    original = image.copy()
-
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Apply Gaussian blur
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # Use Canny edge detection
-    edges = cv2.Canny(blurred, 50, 150)
-
-    # Find contours
-    contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Find the largest contour
-    contour = max(contours, key=cv2.contourArea)
-
-    # Approximate the contour to a polygon
-    epsilon = 0.02 * cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, epsilon, True)
-
-    # If the contour has four corners, it is likely the paper
-    if len(approx) == 4:
-        # Rearrange the points for perspective transformation
-        points = approx.reshape(4, 2)
-        rect = np.zeros((4, 2), dtype="float32")
-
-        # Top-left point has the smallest sum, bottom-right has the largest sum
-        s = points.sum(axis=1)
-        rect[0] = points[np.argmin(s)]
-        rect[2] = points[np.argmax(s)]
-
-        # Top-right point has the smallest difference, bottom-left has the largest difference
-        diff = np.diff(points, axis=1)
-        rect[1] = points[np.argmin(diff)]
-        rect[3] = points[np.argmax(diff)]
-
-        # Compute the width and height of the new image
-        (tl, tr, br, bl) = rect
-        widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-        widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-        maxWidth = max(int(widthA), int(widthB))
-
-        heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-        heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-        maxHeight = max(int(heightA), int(heightB))
-
-        # Define the destination points
-        dst = np.array([
-            [0, 0],
-            [maxWidth - 1, 0],
-            [maxWidth - 1, maxHeight - 1],
-            [0, maxHeight - 1]
-        ], dtype="float32")
-
-        # Perform the perspective transformation
-        M = cv2.getPerspectiveTransform(rect, dst)
-        warped = cv2.warpPerspective(original, M, (maxWidth, maxHeight))
-
-        return warped
-    else:
-        print("The paper was not detected correctly. Returning the original image.")
-        return original
 
 def find_red_point(image_path):
     """
@@ -94,9 +23,7 @@ def find_red_point(image_path):
     
     # Locate the brightest red point
     y, x = np.unravel_index(np.argmax(red_intensity), red_intensity.shape)
-
-    return int(x), int(y)
-    
+    return x, y
 
 def calculate_distance(point1, point2):
     """
@@ -160,7 +87,7 @@ def process_images(directory, pixel_to_mm_ratio):
     return red_points, distances
 
 # Replace 'your_directory_path_here' with the path to your images folder
-image_directory = "./actual_test/planetary_gear/test_1kg/cropped_images"
+image_directory = "actual_test/planetary_gear/test_1kg/cropped_images"
 # Assuming each pixel represents 0.1 mm
 pixel_to_mm_ratio = 0.1
 process_images(image_directory, pixel_to_mm_ratio)
