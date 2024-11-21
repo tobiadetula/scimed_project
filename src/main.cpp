@@ -42,7 +42,7 @@ void setup()
   stepper.setAcceleration(10000); // Acceleration in steps per second squared
   // Set initial position
   stepper.setCurrentPosition(0);
-  setup_ina219();
+  // setup_ina219();
 }
 
 void loop()
@@ -73,7 +73,7 @@ void loop()
   if (currentMillis - previousMillisINA219 >= intervalINA219)
   {
     previousMillisINA219 = currentMillis;
-    read_ina219();
+    // read_ina219();
     print_ina219();
   }
 }

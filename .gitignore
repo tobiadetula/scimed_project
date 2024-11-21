@@ -9,3 +9,29 @@
 *.piolibdeps
 .clang_complete
 logs/
+
+# Python specific files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.env
+*.venv
+env/
+venv/
+ENV/
+VENV/
+*.egg
+*.egg-info
+dist/
+build/
+*.egg-info/
+
+# Image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.ico
