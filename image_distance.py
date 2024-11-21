@@ -50,12 +50,19 @@ def process_images(directory, pixel_to_mm_ratio):
     
     # Calculate distances from the first red point
     initial_point = red_points[0]
-    distances = [
+    distances_from_initial = [
         calculate_distance(initial_point, point) * pixel_to_mm_ratio for point in red_points
     ]
     
+    # Calculate distances between consecutive points
+    distances_between_points = [
+        calculate_distance(red_points[i], red_points[i + 1]) * pixel_to_mm_ratio
+        for i in range(len(red_points) - 1)
+    ]
+    distances_between_points.insert(0, 0)  # No distance for the first point
+    
     # Annotate images and save them
-    for i, (image_path, point, distance) in enumerate(zip(images, red_points, distances)):
+    for i, (image_path, point, distance) in enumerate(zip(images, red_points, distances_from_initial)):
         image = Image.open(image_path)
         draw = ImageDraw.Draw(image)
         draw.ellipse((point[0] - 5, point[1] - 5, point[0] + 5, point[1] + 5), outline="red", width=2)
@@ -75,19 +82,20 @@ def process_images(directory, pixel_to_mm_ratio):
     csv_path = os.path.join(directory, "distances.csv")
     with open(csv_path, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["Image", "Red Point (x, y)", "Distance from Initial Point (mm)"])
-        for i, (image, point, distance) in enumerate(zip(images, red_points, distances)):
-            writer.writerow([os.path.basename(image), point, distance])
+        writer.writerow(["Image", "Red Point (x, y)", "Distance from Initial Point (mm)", "Distance from Previous Point (mm)"])
+        for i, (image, point, distance_from_initial, distance_between) in enumerate(zip(images, red_points, distances_from_initial, distances_between_points)):
+            writer.writerow([os.path.basename(image), f"({point[0]}, {point[1]})", f"{distance_from_initial:.2f}", f"{distance_between:.2f}"])
     
     # Print results
-    for i, (image, point, distance) in enumerate(zip(images, red_points, distances)):
+    for i, (image, point, distance_from_initial, distance_between) in enumerate(zip(images, red_points, distances_from_initial, distances_between_points)):
         print(f"Image {i + 1}: {os.path.basename(image)}")
-        print(f"  Red Point: {point}")
-        print(f"  Distance from Initial Point: {distance:.2f} mm")
-    return red_points, distances
+        print(f"  Red Point: ({point[0]}, {point[1]})")
+        print(f"  Distance from Initial Point: {distance_from_initial:.2f} mm")
+        print(f"  Distance from Previous Point: {distance_between:.2f} mm")
+    return red_points, distances_from_initial
 
 # Replace 'your_directory_path_here' with the path to your images folder
-image_directory = "actual_test/planetary_gear/test_1kg/cropped_images"
+image_directory = "actual_test/capstan_drive/test_2kg"
 # Assuming each pixel represents 0.1 mm
 pixel_to_mm_ratio = 0.1
 process_images(image_directory, pixel_to_mm_ratio)
