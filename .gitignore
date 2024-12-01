@@ -35,3 +35,6 @@ build/
 *.bmp
 *.tiff
 *.ico
+
+# Dataset folder
+dataset/images/*
